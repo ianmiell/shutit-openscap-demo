@@ -87,12 +87,6 @@ class openscap_demo(ShutItModule):
 		shutit.install('openscap-utils')
 		shutit.install('wget')
 		shutit.send('systemctl start docker')
-		shutit.send('docker run -d --name "our-rhel7-container" -ti registry.access.redhat.com/rhel7 sleep infinity')
-		shutit.send('oscap-docker container-cve our-rhel7-container',note='Get cve report for this container.')
-		shutit.install('scap-security-guide',note='Install the ssg security policy')
-		shutit.send('oscap-docker container our-rhel7-container oval eval --results oval-results.xml --report report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-oval.xml',note='Scan the image with a custom security policy.')
-		shutit.send('cat oval-results.xml',note='Output the results')
-		shutit.send('oscap-docker image registry.access.redhat.com/rhel7 oval eval --results oval-results.xml --report report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-oval.xml',note='Do the same, but scan the image rather than the container.')
 
 		# based on: https://blogs.oracle.com/darren/entry/compliance_reporting_with_scap
 		oval_def = r'''<?xml version="1.0" encoding="UTF-8"?>
@@ -150,10 +144,17 @@ xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5
 </oval_definitions>'''
 		shutit.send_file('/tmp/test1.xml',oval_def)
 		shutit.send('cat /tmp/test1.xml',note='View the contents of our simple test.')
-		shutit.send('oscap oval eval /tmp/test1.xml', note='We can evaluate this policy on a given host with this command.')
+		shutit.send('oscap oval eval /tmp/test1.xml', note='We can evaluate this policy on the host with this command.')
 		shutit.send('oscap oval eval --results results.xml --report report.html /tmp/test1.xml',note='As you can see we got the expected failure of the test, but that output is not very useful, instead generate some html output, which can be viewed on a browser, or emailed out.')
-		shutit.pause_point('')
-		# TODO: docker-oscap
+
+		shutit.send('docker run -d --name "our-rhel7-container" -ti registry.access.redhat.com/rhel7 sleep infinity')
+		shutit.send('oscap-docker container-cve our-rhel7-container',note='Get cve report for this container.')
+		shutit.install('scap-security-guide',note='Install the ssg security policy')
+		shutit.send('oscap-docker container our-rhel7-container oval eval --results oval-results.xml --report report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-oval.xml',note='Scan the image with a custom security policy.')
+		shutit.send('cat oval-results.xml',note='Output the results')
+		shutit.send('oscap-docker image registry.access.redhat.com/rhel7 oval eval --results oval-results.xml --report report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-oval.xml',note='Do the same, but scan the image rather than the container.')
+		shutit.send('oscap-docker image registry.access.redhat.com/rhel7 oval eval /tmp/test1.xml',note='Now perform the check we created earlier against the rhel image. It will fail, as it is not a CentOS image.')
+
 		shutit.logout()
 		shutit.logout()
 		return True
