@@ -125,6 +125,6 @@ def module():
 		description='',
 		maintainer='',
 		delivery_methods=['bash'],
-		depends=['shutit-library.virtualbox.virtualbox.virtualbox','shutit.tk.vagrant.vagrant.vagrant']
+		depends=['shutit-library.virtualbox.virtualbox.virtualbox','tk.shutit.vagrant.vagrant.vagrant']
 	)
 
