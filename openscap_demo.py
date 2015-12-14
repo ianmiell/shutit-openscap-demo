@@ -79,20 +79,83 @@ class openscap_demo(ShutItModule):
 				shutit.send('cd -')
 				shutit.send('rm -rf /tmp/docker_openscap')
 		else:
-			shutit.send('mkdir -p /tmp/docker_criu')
-			shutit.send('cd /tmp/docker_criu')
+			shutit.send('mkdir -p /tmp/docker_openscap')
+			shutit.send('cd /tmp/docker_openscap')
 		shutit.send('vagrant init ianmiell/centos7_lvm')
 		shutit.send('vagrant up --provider virtualbox')
 		shutit.login(command='vagrant ssh')
 		shutit.login(command='sudo su')
 		shutit.install('docker')
 		shutit.install('openscap-utils')
-		shutit.send('docker run --name "our-rhel7-container" -ti registry.access.redhat.com/rhel7 sleep infinity')
+		shutit.install('wget')
+		shutit.send('systemctl start docker')
+		shutit.send('docker run -d --name "our-rhel7-container" -ti registry.access.redhat.com/rhel7 sleep infinity')
 		shutit.send('oscap-docker container-cve our-rhel7-container',note='Get cve report for this container.')
 		shutit.install('scap-security-guide',note='Install the ssg security policy')
 		shutit.send('oscap-docker container our-rhel7-container oval eval --results oval-results.xml --report report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-oval.xml',note='Scan the image with a custom security policy.')
 		shutit.send('cat oval-results.xml',note='Output the results')
 		shutit.send('oscap-docker image registry.access.redhat.com/rhel7 oval eval --results oval-results.xml --report report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-oval.xml',note='Do the same, but scan the image rather than the container.')
+
+		# based on: https://blogs.oracle.com/darren/entry/compliance_reporting_with_scap
+		oval_def = r'''<?xml version="1.0" encoding="UTF-8"?>
+<oval_definitions xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" 
+xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" 
+xmlns:independent-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" 
+xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5 
+   oval-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#independent 
+   independent-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd">
+
+  <generator>
+    <oval:product_name>Enhanced SCAP Editor</oval:product_name>
+    <oval:product_version>0.0.11</oval:product_version>
+    <oval:schema_version>5.8</oval:schema_version>
+    <oval:timestamp>2015-12-12T21:43:55</oval:timestamp>
+  </generator>
+  <definitions>
+    <definition id="oval:shutit.tk:def:1" version="1" class="compliance">
+      <metadata>
+        <title>OS Release</title>
+        <affected family="unix">
+          <platform></platform>
+        </affected>
+        <description>Check this is rhel</description>
+      </metadata>
+      <criteria operator="AND" negate="false" comment="Single test">
+        <criterion comment="Include test."
+          test_ref="oval:shutit.tk:tst:1" negate="false"/>
+      </criteria>
+    </definition>
+  </definitions>
+  <tests>
+    <textfilecontent54_test 
+        xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" 
+        id="oval:shutit.tk:tst:1" version="1" check="all" 
+        comment="Test object" 
+        check_existence="all_exist">
+      <object object_ref="oval:shutit.tk:obj:1"/>
+    </textfilecontent54_test>
+  </tests>
+  <objects>
+    <textfilecontent54_object 
+        xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" 
+        id="oval:shutit.tk:obj:1" version="1" 
+        comment="Test content">
+      <path datatype="string" operation="equals">/etc</path>
+      <filename datatype="string" operation="equals">os-release</filename>
+      <pattern datatype="string" 
+         operation="pattern match">^.centos*$</pattern>
+      <instance datatype="int" operation="greater than or equal">1</instance>
+    </textfilecontent54_object>
+  </objects>
+</oval_definitions>'''
+		shutit.send_file('/tmp/test1.xml',oval_def)
+		shutit.send('cat /tmp/test1.xml',note='View the contents of our simple test.')
+		shutit.send('oscap oval eval /tmp/test1.xml', note='We can evaluate this policy on a given host with this command.')
+		shutit.send('oscap oval eval --results results.xml --report report.html /tmp/test1.xml',note='As you can see we got the expected failure of the test, but that output is not very useful, instead generate some html output, which can be viewed on a browser, or emailed out.')
+		shutit.pause_point('')
+		# TODO: docker-oscap
 		shutit.logout()
 		shutit.logout()
 		return True
