@@ -85,7 +85,7 @@ class openscap_demo(ShutItModule):
 		shutit.send('vagrant up --provider virtualbox')
 		shutit.login(command='vagrant ssh')
 		shutit.login(command='sudo su')
-		shutit.install('docker.io')
+		shutit.install('docker')
 		shutit.install('openscap-utils')
 		shutit.send('docker run --name "our-rhel7-container" -ti registry.access.redhat.com/rhel7 sleep infinity')
 		shutit.send('oscap-docker container-cve our-rhel7-container',note='Get cve report for this container.')
