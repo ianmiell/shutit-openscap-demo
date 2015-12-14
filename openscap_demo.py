@@ -73,14 +73,12 @@ class openscap_demo(ShutItModule):
 		# shutit.fail(msg)				- Fail the program and exit with status 1
 		# 
 		if shutit.file_exists('/tmp/docker_openscap',directory=True):
-			if not shutit.get_input('Want me to try to start the existing instance up (y), or wipe the existing one (n)',boolean=True):
-				shutit.send('cd /tmp/docker_openscap')
-				shutit.send('vagrant destroy -f')
-				shutit.send('cd -')
-				shutit.send('rm -rf /tmp/docker_openscap')
-		else:
-			shutit.send('mkdir -p /tmp/docker_openscap')
 			shutit.send('cd /tmp/docker_openscap')
+			shutit.send('vagrant destroy -f')
+			shutit.send('cd -')
+			shutit.send('rm -rf /tmp/docker_openscap')
+		shutit.send('mkdir -p /tmp/docker_openscap')
+		shutit.send('cd /tmp/docker_openscap')
 		shutit.send('vagrant init ianmiell/centos7_lvm')
 		shutit.send('vagrant up --provider virtualbox')
 		shutit.login(command='vagrant ssh')
@@ -118,7 +116,7 @@ xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5
       <metadata>
         <title>OS Release</title>
         <affected family="unix">
-          <platform></platform>
+          <platform>CentOS Linux 7</platform>
         </affected>
         <description>Check this is rhel</description>
       </metadata>
@@ -145,7 +143,7 @@ xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5
       <path datatype="string" operation="equals">/etc</path>
       <filename datatype="string" operation="equals">os-release</filename>
       <pattern datatype="string" 
-         operation="pattern match">^.centos*$</pattern>
+         operation="pattern match">^.*centos.*$</pattern>
       <instance datatype="int" operation="greater than or equal">1</instance>
     </textfilecontent54_object>
   </objects>
