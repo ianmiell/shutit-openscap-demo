@@ -136,6 +136,7 @@ class openscap_demo(ShutItModule):
 		shutit.send('oscap-docker container our-rhel7-container oval eval --results oval-results.xml --report report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-oval.xml',note='Scan the image with a custom security policy, and generate a report in html and xml.')
 		shutit.send('cat oval-results.xml',note='Output the xml results')
 		shutit.send('oscap-docker image registry.access.redhat.com/rhel7 oval eval --results oval-results.xml --report report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-oval.xml',note='Do the same, but scan the image rather than the container.')
+		shutit.pause_point('')
 
 		shutit.logout()
 		shutit.logout()
